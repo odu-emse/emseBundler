@@ -1,7 +1,8 @@
 import tkinter
-from tkinter import Button
 from uiInit import buildUI
+from moduleGetter import fetchModule
 
+fetchModule()
 # Init tkinter UI
 window = tkinter.Tk()
 buildUI(window)
