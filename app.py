@@ -1,11 +1,13 @@
 import tkinter
-from uiInit import buildUI
-from moduleGetter import fetchModule
+from uiInit import *
+from moduleGetter import *
 
-fetchModule()
 # Init tkinter UI
 window = tkinter.Tk()
 buildUI(window)
+
+courseList = fetchCourses()
+addCourses(window, courseList)
 
 # Main call
 window.mainloop()
