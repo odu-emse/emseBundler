@@ -13,8 +13,13 @@ buildUI(window)
 courseList = fetchCourses()
 addCourses(window, courseList)
 
-fetchModule("CS101", 1)
-fetchModule("CS101", 2)
+searching = True
+moduleNum = 1
+while searching:
+    searching = fetchModule("CS101", moduleNum)
+    moduleNum += 1
+
+
 
 # Main call
 window.mainloop()

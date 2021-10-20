@@ -1,6 +1,5 @@
 import paramiko
 import os
-from stat import S_ISDIR as isdir
 
 host = "51.222.87.170"
 ssh = paramiko.SSHClient()
@@ -17,6 +16,7 @@ def fetchCourses():
 
 def fetchModule(course, module):
     #local directory
+    successful = False
     localPath = "interface/assets/modules/" + str(module)
 
     # Fetch absolute remote directory path
@@ -25,13 +25,14 @@ def fetchModule(course, module):
 
     # Get the list of all relevent module content in this module
     sshin, sshout, ssherr = ssh.exec_command('find ./' + course + ' | grep ".*[Mm]od.*' + str(module) + '"')
-    print("printing path: " + remoteRootDir)
 
     # Open sftp channel
     sftp = ssh.open_sftp()
-
+    print("Open sftp connection for module: " + str(module))
     # Download all the files from the list of module content
     for line in sshout.read().decode().splitlines():
+        successful = True
+
         # The filename for the file being downloaded
         filename = line[line.rfind('/')+1:]
         
@@ -44,11 +45,6 @@ def fetchModule(course, module):
         if not os.path.isdir(localPath):
             os.mkdir(localPath)
 
-        # Log the Remote and local path for the get
-        print("Remote", remoteRootDir + '/' + line[2:])
-        print("Local", localPath + '/' + filename)
-        print('\n')
-
         # Attempt to get the file through sftp
         try:
             sftp.get(remoteRootDir + '/' + line[2:], localPath + '/' + filename)
@@ -56,6 +52,8 @@ def fetchModule(course, module):
             print("Failed to get file from " + remoteRootDir + '/' + line[2:], "File Not found")
 
     sftp.close()
+
+    return successful
 
 def closeSSHChannels():
     ssh.close()

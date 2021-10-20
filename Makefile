@@ -2,5 +2,7 @@ run:
 	python3 app.py
 
 clean:
-	rd /q /s interface
+	rm -rf interface
 
+cleanWin:
+	rd /q /s interface
