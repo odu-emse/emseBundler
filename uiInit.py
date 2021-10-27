@@ -5,6 +5,8 @@ selectedCourse = ""
 
 def tryFetch(event):
     if selectedCourse != "":
+        indexFile = open("interface/assets/modules/index.json", 'w')
+        indexFile.write('{\n\t"title": "' + selectedCourse + '"\n}')
         searching = True
         moduleNum = 1
         while searching:
