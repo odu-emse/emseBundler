@@ -1,59 +1,27 @@
 import paramiko
+import boto3
 import os
 
 host = "51.222.87.170"
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-try:
-    ssh.connect(hostname=host, username='ftpuser', password='emseODU')
-except Exception:
-    print("Cannot valid SSH connection to fetch module information")
-
+s3 = boto3.resource('s3')
 
 def fetchCourses():
-    sshin, sshout, ssherr = ssh.exec_command('ls')
-    return sshout.read().decode()
+    courses = []
+    client = boto3.client("s3")
+    pag = client.get_paginator('list_objects')
+    result = pag.paginate(Bucket='almpmodules', Delimiter='/')
+    for prefix in result.search('CommonPrefixes'):
+        print(prefix.get('Prefix'))
+        courses.append(prefix.get('Prefix'))
 
-def fetchModule(course, module):
-    #local directory
-    successful = False
-    localPath = "interface/assets/modules/" + str(module)
+    return courses
 
-    # Fetch absolute remote directory path
-    _, remoteRootDir, ssherr = ssh.exec_command('pwd')
-    remoteRootDir = remoteRootDir.read().decode().strip()
-
-    # Get the list of all relevent module content in this module
-    sshin, sshout, ssherr = ssh.exec_command('find ./' + course + ' | grep ".*[Mm]od.*' + str(module) + '"')
-
-    # Open sftp channel
-    sftp = ssh.open_sftp()
-    print("Open sftp connection for module: " + str(module))
-    # Download all the files from the list of module content
-    for line in sshout.read().decode().splitlines():
-        successful = True
-
-        # The filename for the file being downloaded
-        filename = line[line.rfind('/')+1:]
-        
-        # Check for the presence of the interface module asset strucutre
-        if not os.path.isdir("interface/assets/modules"):
-            print("Could not find interface module output directory. Cloning the repository was skipped or failed.")
-            return
-        
-        # Check if the module directory already exists, if not make it
-        if not os.path.isdir(localPath):
-            os.mkdir(localPath)
-
-        # Attempt to get the file through sftp
-        try:
-            sftp.get(remoteRootDir + '/' + line[2:], localPath + '/' + filename)
-        except Exception:
-            print("Failed to get file from " + remoteRootDir + '/' + line[2:], "File Not found")
-
-    sftp.close()
-
-    return successful
-
-def closeSSHChannels():
-    ssh.close()
+def fetchModules(courseName):
+    bucket = s3.Bucket("almpmodules") 
+    for obj in bucket.objects.filter(Prefix = courseName):
+        remotePath = obj.key[obj.key.find('/')+1:]
+        if not os.path.exists(os.path.dirname("interface/assets/" + remotePath)):
+            os.makedirs(os.path.dirname("interface/assets/" + remotePath))
+        print(remotePath)
+        bucket.download_file(obj.key, "interface/assets/" + remotePath) # save to same path
+        # bucket.download_file(obj.key, obj.key) # save to same path

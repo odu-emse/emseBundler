@@ -1,17 +1,13 @@
 from tkinter import *
-from moduleGetter import fetchModule
+from moduleGetter import fetchModules
 
 selectedCourse = ""
 
 def tryFetch(event):
-    if selectedCourse != "":
-        indexFile = open("interface/assets/modules/index.json", 'w')
-        indexFile.write('{\n\t"title": "' + selectedCourse + '"\n}')
-        searching = True
-        moduleNum = 1
-        while searching:
-            searching = fetchModule(selectedCourse, moduleNum)
-            moduleNum += 1
+    global selectedCourse
+    if selectedCourse != '':
+        fetchModules(selectedCourse)
+        
         
 def makeSelection(event):
     global selectedCourse
@@ -35,6 +31,7 @@ def buildUI(windowRef):
     # nameLabel.attributes('-alpha', 0.0)
 
 def addCourses(windowRef, courseList):
+    global selectedCourse
     frame = Frame(windowRef)
     frame.pack()
     
@@ -47,8 +44,8 @@ def addCourses(windowRef, courseList):
 
     dataTable.config(yscrollcommand=scroll.set)
 
-    for line in courseList.splitlines():
-        dataTable.insert(END, line)
+    for line in courseList:
+        dataTable.insert(END, line[:-1])
     
     dataTable.bind("<<ListboxSelect>>", makeSelection)
 
